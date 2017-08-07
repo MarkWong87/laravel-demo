@@ -1,0 +1,88 @@
+<?php
+/**
+ *番剧底层实现类
+ *@auth  Dingning@acfun.tv
+ *date   2017-04-06
+ *
+**/
+namespace App\Repositories\V2;
+use Illuminate\Support\Facades\DB;
+class BangumiImplement  implements  BangumiInterface
+ {
+	 const MAX_PAGESIZE = 100;
+	 const PAGESIZE = 20;
+    /**
+     * 获取番剧列表数据
+	 * $field  array() 需要返回字段
+	 * $query  array() 传入参数条件
+	 * return  array()
+     *
+	 */
+    public function getList($params,$fields="*")
+	{
+		$where    = $this->_setWhere($params);
+		$pagesize = 0<$params['pagesize'] && $params['pagesize']<=self::MAX_PAGESIZE?$params['pagesize']:self::PAGESIZE;
+		if(isset($params['tagIds']))
+		{
+			$tag_id  = explode(",",$params['tagIds']);
+			if(count($tag_id)>1)
+			{
+				$res = DB::table('ac_bangumi')->select($fields)->join('ac_bangumi_tag',function ($join){
+					$join->on('ac_bangumi.id','ac_bangumi_tag.bangumi_id');
+					})->whereIn("ac_bangumi_tag.tag_id",$tag_id)->where($where)->paginate($pagesize)->toArray();	
+			}else{
+				
+				$where[] = array("ac_bangumi_tag.tag_id",$tag_id[0]);
+				$res = DB::table('ac_bangumi')->select()->join('ac_bangumi_tag',function ($join){
+					$join->on('ac_bangumi.id','ac_bangumi_tag.bangumi_id');
+					})->where($where)->paginate($pagesize)>toArray();	
+			}
+			return $res;
+		}else{
+
+			
+
+		}
+	}
+
+	
+	/**
+	 *  根据请求参数 整合成where查询条件
+	 *  $request		array()  http请求数据 
+	 *  return    array()
+	 *
+	**/
+
+					//	'tagIds'     => 'string',
+					//	'type'		 => 'integer',
+					//	'displayIos' => 'integer',
+					//	'isWeb'      => 'integer',
+					//	'isNew'      => 'integer',
+					//	'isIndex'    => 'integer',//是否是首页请求
+					//	'isUnion'    => 'integer',
+					//	'pageNo'     => 'integer',
+					//	'pagesize'   => 'integer',
+					//	'sort'		 => 'integer',
+	private function _setWhere($params)
+	{
+		$where = array();
+		if(isset($params['type']) && !empty($params['type']))
+		{
+			$where[] = array("ac_bangumi.type",$params['type']);
+		}
+		if(isset($params['displayIos']) && !empty($params['displayIos']))
+		{
+			$where[] = array("ac_bangumi.display_ios",$params['displayIos']);
+		}
+		if(isset($params['isWeb']) && !empty($params['isWeb']))
+		{
+			$where[] = array("ac_bangumi.display_web",$params['isWeb']);
+		}
+		if(isset($params['isNew']) && !empty($params['isNew']))
+		{
+			$where[] = array("ac_bangumi.display_new",$pxarams['isNew']);
+		}
+		return $where;
+	}
+
+}
